@@ -64,5 +64,6 @@ select AVG(weight) from jbparts where color='black';
 /* 13 */
 \! echo ""
 \! echo "13."
+select jbsupplier.name,sum(jbsupply.quan*jbparts.weight) from jbsupply,jbparts,jbsupplier where jbsupply.supplier=jbsupplier.id AND jbsupplier.city in (select id from jbcity where state='Mass') group by jbsupply.supplier;
 
 
