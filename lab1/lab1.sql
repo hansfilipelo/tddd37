@@ -98,9 +98,23 @@ create table jbitem_copy (id int NOT NULL DEFAULT 0,
  CONSTRAINT fk_item_copy_dept FOREIGN KEY(dept) REFERENCES jbdept(id),
  CONSTRAINT fk_item_copy_supplier FOREIGN KEY(supplier) REFERENCES jbsupplier(id));
 
+insert into jbitem_copy select * from jbitem where price < (select AVG(price) from jbitem);
 
 /* 15 */
 \! echo ""
 \! echo "15."
+create view jbitem_view as select * from jbitem where price < (select AVG(price) from jbitem);
+
+/* 16 */
+\! echo ""
+\! echo "16."
+\! echo "A table is static and a view is dynamic. Static means that we copy content from the original table"
+\! echo "The more dynamic view updates when the table that the data originates from updates - it's simply pointer to data in that table."
+
+
+/* 17 */
+\! echo ""
+\! echo "17."
+
 
 
