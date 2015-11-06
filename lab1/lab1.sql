@@ -1,4 +1,21 @@
 
+/* Initiate script with "clean" DB */
+SET FOREIGN_KEY_CHECKS = 0; 
+SET @tables = NULL;
+SELECT GROUP_CONCAT(table_schema, '.', table_name) INTO @tables
+  FROM information_schema.tables 
+  WHERE table_schema = 'tddd37'; -- specify DB name here.
+
+SET @tables = CONCAT('DROP TABLE ', @tables);
+PREPARE stmt FROM @tables;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET FOREIGN_KEY_CHECKS = 1;
+
+/* Set up DB-env */
+source ../company_schema.sql
+source ../company_data.sql
+
 /* 1*/
 \! echo ""
 \! echo "1"
@@ -65,5 +82,25 @@ select AVG(weight) from jbparts where color='black';
 \! echo ""
 \! echo "13."
 select jbsupplier.name,sum(jbsupply.quan*jbparts.weight) from jbsupply,jbparts,jbsupplier where jbsupply.supplier=jbsupplier.id AND jbsupplier.city in (select id from jbcity where state='Mass') group by jbsupply.supplier;
+
+/* 14 */
+\! echo ""
+\! echo "14."
+create table jbitem_copy (id int NOT NULL DEFAULT 0,
+ name varchar(20),
+ dept int NOT NULL,
+ price int,
+ qoh int unsigned,
+ supplier int NOT NULL,
+ PRIMARY KEY (id),
+ KEY fk_item_copy_dept (dept),
+ KEY fk_item_copy_supplier (supplier),
+ CONSTRAINT fk_item_copy_dept FOREIGN KEY(dept) REFERENCES jbdept(id),
+ CONSTRAINT fk_item_copy_supplier FOREIGN KEY(supplier) REFERENCES jbsupplier(id));
+
+
+/* 15 */
+\! echo ""
+\! echo "15."
 
 
