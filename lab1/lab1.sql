@@ -1,5 +1,6 @@
 
 /* Initiate script with "clean" DB */
+/* Delete views */
 SET FOREIGN_KEY_CHECKS = 0;
 SET GROUP_CONCAT_MAX_LEN=32768;
 SET @views = NULL;
@@ -12,6 +13,18 @@ SET @views = CONCAT('DROP VIEW IF EXISTS ', @views);
 PREPARE stmt FROM @views;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+/* Delete tables */
+SET @tables = NULL;
+SELECT GROUP_CONCAT(table_schema, '.', table_name) INTO @tables
+  FROM information_schema.tables 
+  WHERE table_schema = 'tddd37'; -- specify DB name here.
+
+SET @tables = CONCAT('DROP TABLE ', @tables);
+PREPARE stmt FROM @tables;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 /* Set up DB-env */
@@ -117,6 +130,32 @@ create view jbitem_view as select * from jbitem where price < (select AVG(price)
 /* 17 */
 \! echo ""
 \! echo "17."
+create view jbdebit_cost_implicit as select jbdebit.id,SUM(jbitem.price*jbsale.quantity) from jbdebit,jbitem,jbsale where jbsale.debit = jbdebit.id and jbsale.item = jbitem.id group by jbdebit.id;
 
 
+/* 18 */
+\! echo ""
+\! echo "18."
+create view jbdebit_cost_explicit as select jbdebit.id,SUM(jbitem.price*jbsale.quantity) from jbdebit inner join jbitem inner join jbsale on jbsale.debit = jbdebit.id and jbsale.item = jbitem.id group by jbdebit.id;
 
+\! echo "We use the inner join since it will only give us matching values from all three tables,and nothing elese. For an example, we do not want items which has never been sold."
+
+
+/* 19 */
+\! echo ""
+\! echo "19."
+
+delete from jbsale where item in (select id from jbitem where supplier = (select id from jbsupplier where city = (select id from jbcity where name='Los Angeles')));
+delete from jbitem where supplier = (select id from jbsupplier where city = (select id from jbcity where name='Los Angeles'));
+delete from jbitem_copy where supplier = (select id from jbsupplier where city = (select id from jbcity where name='Los Angeles'));
+delete from jbsupplier where city = (select id from jbcity where name='Los Angeles');
+
+\! echo "b) The one supplier based in LA has foreign_keys which refered to items in jbitem, which in turn has foreign keys refering to sales in jbsales. Whe removed the corresponding items from jbsale and jbitem and then we removed the supplier. We also removed a copy of jbitem created earlier in this assignement."
+
+
+/* 20 */
+\! echo ""
+\! echo "20."
+
+CREATE VIEW jbsale_supply(supplier,item,quantity) AS SELECT jbsupplier.name,jbitem.name,jbsale.quantity FROM jbsupplier INNER JOIN jbitem LEFT JOIN jbsale ON jbsupplier.id=jbitem.supplier and jbsale.item=jbitem.id;
+SELECT supplier,sum(quantity) AS sum FROM jbsale_supply GROUP BY supplier;
