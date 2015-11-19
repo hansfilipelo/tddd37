@@ -114,6 +114,8 @@ select 'LAB2' AS '';
 
 /* 3 */
 select '3.' AS '';
+
+select 'Technically you do not have to initialize bonus with a value. All managers does not need to get a bonus, hence it can be set to NULL if using a relational model that supports it.' AS '';
 /* Create table and insert managers*/
 CREATE TABLE jbmanager ( id int(11) NOT NULL DEFAULT 0, bonus int(11) NOT NULL DEFAULT 0, UNIQUE KEY fk_manager_id (id), CONSTRAINT fk_manager_id FOREIGN KEY (id) REFERENCES jbemployee (id) ON DELETE CASCADE);
 INSERT INTO jbmanager(id) SELECT manager FROM jbemployee WHERE NOT manager='NULL' group by manager;
