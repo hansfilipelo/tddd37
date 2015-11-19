@@ -131,6 +131,38 @@ select '4.' AS '';
 UPDATE jbmanager SET bonus=bonus+10000 WHERE id IN (SELECT manager FROM jbdept);
 
 
+/* 5 */
+select '5.' AS '';
 
+select 'Decouple jbsale from jbdebit so we can alter it' AS '';
+alter table jbsale drop foreign key fk_sale_debit;
+select 'Primary id will be in main table for class, jbtransaction - remove' AS '';
+ALTER TABLE jbdebit DROP PRIMARY KEY;
+select 'Will be in transaction' AS '';
+ALTER TABLE jbdebit DROP FOREIGN KEY fk_debit_employee;
+
+select 'Create jbcustomer' AS '';
+CREATE TABLE jbcustomer ( pnr varchar(20) NOT NULL, name varchar(20) NOT NULL, streetaddress varchar(20), city int(11) NOT NULL DEFAULT 0, PRIMARY KEY (pnr), KEY fk_customer_city (city), CONSTRAINT fk_customer_city FOREIGN KEY (city) REFERENCES jbcity(id));
+
+select 'Create jbaccount' AS '';
+CREATE TABLE jbaccount ( id int(11) NOT NULL DEFAULT 0,  customer varchar(20) NOT NULL, PRIMARY KEY (id), KEY fk_account_customer (customer), CONSTRAINT fk_account_customer FOREIGN KEY (customer) REFERENCES jbcustomer(pnr));
+
+select 'Create transaction' AS '';
+CREATE TABLE jbtransaction ( id int(11) NOT NULL DEFAULT 0, sdate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, employee int(11) NOT NULL, account int(11) NOT NULL, PRIMARY KEY (id), KEY fk_transaction_employee (employee), KEY fk_transaction_account (account), CONSTRAINT fk_transaction_employee FOREIGN KEY (employee) REFERENCES jbemployee(id), CONSTRAINT fk_transaction_account FOREIGN KEY (account) REFERENCES jbaccount(id));
+
+select 'Need data to fill up our responsibilities for FK' AS '';
+INSERT INTO jbcustomer(pnr,name,streetaddress,city) VALUES ('990909-1337','Li Sam','Azure road 1',537);
+INSERT INTO jbaccount(id,customer) SELECT DISTINCT jbdebit.account,jbcustomer.pnr FROM jbdebit,jbcustomer;
+INSERT INTO jbtransaction(id,sdate,employee,account) SELECT * FROM jbdebit;
+
+select 'Alter jbdebit to fit new structure' AS '';
+ALTER TABLE jbdebit DROP COLUMN sdate;
+ALTER TABLE jbdebit DROP COLUMN employee;
+ALTER TABLE jbdebit DROP COLUMN account;
+ALTER TABLE jbdebit ADD CONSTRAINT fk_debit_transaction FOREIGN KEY (id) REFERENCES jbtransaction(id);
+
+select 'Create last subclasses to transaction' AS '';
+CREATE TABLE jbdeposit ( id int(11) NOT NULL DEFAULT 0, ammount int(11) NOT NULL DEFAULT 0, KEY fk_deposit_transaction (id), CONSTRAINT fk_deposit_transaction FOREIGN KEY (id) REFERENCES jbtransaction(id));
+CREATE TABLE jbwithdrawal ( id int(11) NOT NULL DEFAULT 0, ammount int(11) NOT NULL DEFAULT 0, KEY fk_withdrawal_transaction (id), CONSTRAINT fk_withdrawal_transaction FOREIGN KEY (id) REFERENCES jbtransaction(id));
 
 
