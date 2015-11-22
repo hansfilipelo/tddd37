@@ -15,9 +15,15 @@ These rules will be referred to in this lab.
 
 a)
 
+F={{AB->C}; {A->D}}, AB prime
+
 b)
 
+F={{AB->CD}; {C->D}}, AB prime
+
 c)
+
+F={{AB->CD}; {C->A}}, AB prime
 
 **2.**
 
