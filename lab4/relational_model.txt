@@ -1,0 +1,31 @@
+Destination(airportId, Name)
+
+
+Route(idRoute, From, To)
+
+
+WeeklySchedule(idWeeklySchedule, Year, Weekday, DepartureTime, Route)
+
+
+Year(idYear, Year)
+
+
+Weekday(idWeekday, Name, PriceFactor)
+
+
+Flights(idFlights, WeeklySchedule, WeekNr, Plane)
+
+
+Plane(idPlane, Model, Seats)
+
+
+Payments(idReservations, cardHolderName, creditCardNumber)
+
+
+Reservations(idReservations, Flight, Contact)
+
+
+Passengers(PassportNr, FirstName, FamilyName)
+
+
+ResPass(idReservations, PassportNr, TicketId)
