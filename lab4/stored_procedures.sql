@@ -19,13 +19,12 @@ INSERT INTO Destination (airportId, name, country) VALUES (airport_code, name, c
 END//
 delimiter ;
 
-/* Won't work unless change in DB is implemented 
+
 SELECT 'Add procedure addDestination for inserting new destination' AS '';
 delimiter //
 CREATE PROCEDURE addRoute(IN departure_airport_code VARCHAR(3), IN arrival_airport_code VARCHAR(3), IN year INT(11), IN routeprice INT(11)) 
 BEGIN 
-INSERT INTO Destination (airportId, name, country) VALUES (airport_code, name, country); 
+INSERT INTO Route (from, to, routePrice, year) VALUES ((select airportId from Destination where airportId=departure_airport_code), (select airportId from Destination where airportId=arrival_airport_code), routeprice, year); 
 END//
 delimiter ;
-*/
 
