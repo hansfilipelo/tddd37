@@ -35,13 +35,13 @@ delimiter ;
 DROP PROCEDURE IF EXISTS addRoute;
 SELECT 'Add procedure addDestination for inserting new destination' AS '';
 delimiter //
-CREATE PROCEDURE addRoute(IN departureAirportCode VARCHAR(3), IN arrivalAirportCode VARCHAR(3), IN inYear INT(11), IN inRoutePrice INT(11))
+CREATE PROCEDURE addRoute(IN departureAirportCode VARCHAR(3), IN arrivalAirportCode VARCHAR(3), IN inYear INT(11), IN inRoutePrice DOUBLE)
 BEGIN
-INSERT INTO Route (from, to, routePrice, year)
+INSERT INTO Route (fromAirport, toAirport, routePrice, year)
 VALUES (
-  (select airportId from Destination where airportId=departureAirportCode),
-  (select airportId from Destination where airportId=arrivalAirportCode),
+  departureAirportCode,
+  arrivalAirportCode,
   inRoutePrice,
-  (select idYear from Year where year=inYear));
+  (SELECT idYear FROM Year WHERE year=inYear));
 END//
 delimiter ;
