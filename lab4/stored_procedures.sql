@@ -19,7 +19,15 @@ SELECT 'Add procedure addDestination for inserting new destination' AS '';
 delimiter //
 CREATE PROCEDURE addDestination(IN airport_code VARCHAR(3), IN destName VARCHAR(45), IN country VARCHAR(45))
 BEGIN
-INSERT INTO Country (name) VALUES (UPPER(country)) ON DUPLICATE KEY UPDATE name=UPPER(country);
+
+IF (SELECT COUNT(*) FROM Country) = 0
+THEN
+	INSERT INTO Country (name) VALUES (UPPER(country));
+ELSE
+	INSERT INTO Country (name) SELECT country FROM Country
+	WHERE (SELECT COUNT(*) FROM Country WHERE name=country)=0;
+END IF;
+
 INSERT INTO Destination (airportId, name, country) VALUES (airport_code, destName, (select idCountry from Country where name=UPPER(country)));
 END//
 delimiter ;
