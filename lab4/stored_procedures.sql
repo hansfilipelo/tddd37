@@ -1,3 +1,4 @@
+USE brianair;
 /* Our stored procedures  */
 # ----------------
 
@@ -60,6 +61,7 @@ delimiter ;
 # ----------------
 
 DROP PROCEDURE IF EXISTS addPlane;
+SELECT 'Add procedure addPlane for inserting new plane type' AS '';
 delimiter //
 CREATE PROCEDURE addPlane(IN inModel VARCHAR(45), IN inSeats INT(11))
 BEGIN
@@ -69,7 +71,6 @@ VALUES (
   inSeats);
 END//
 delimiter ;
-CALL addPlane('Fokker 70',40);
 
 # ----------------
 
@@ -100,4 +101,53 @@ loopstart: LOOP
   LEAVE loopstart;
   END LOOP loopstart;
 END //
+delimiter ;
+
+# ----------------
+
+DROP FUNCTION IF EXISTS calculateFreeSeats;
+SELECT 'Add helper function for checking number of free seats' AS '';
+CREATE FUNCTION calculateFreeSeats(flightnumber INT)
+  RETURNS INT
+    RETURN 40-(SELECT COUNT(*) FROM Reservations,Payments WHERE Reservations.idReservations=Payments.idReservations AND Reservations.flight = flightnumber);
+
+# ----------------
+
+DROP PROCEDURE IF EXISTS calculatePriceHelper;
+DROP FUNCTION IF EXISTS calculatePrice;
+SELECT 'Add helper function for calculating seat price for a flight' AS '';
+delimiter //
+CREATE FUNCTION calculatePrice(flightnumber INT(11))
+  RETURNS DOUBLE
+    BEGIN
+      SET @weeklySchedule =
+          (SELECT weeklySchedule FROM Flights WHERE idFlights = flightnumber);
+
+      SET @routePrice =
+          (SELECT routePrice FROM Route
+          WHERE idRoute =
+              (SELECT weekday FROM WeeklySchedule
+              WHERE idWeeklySchedule = @weeklySchedule));
+
+      SET @weekdayFactor =
+          (SELECT weekdayFactor FROM Weekday
+          WHERE idWeekday = @weeklySchedule);
+
+      SET @bookedPassengers =
+          (SELECT COUNT(*) FROM Reservations,Payments
+          WHERE Reservations.idReservations=Payments.idReservations AND
+          Reservations.flight = flightnumber);
+
+      SET @profitFactor =
+          (SELECT profitfactor FROM Year
+          WHERE idYear =
+              (SELECT year FROM Weekday
+              WHERE idWeekday =
+                  (SELECT weekday FROM WeeklySchedule
+                  WHERE idWeeklySchedule = @weeklySchedule)));
+
+      RETURN @routePrice * @weekdayFactor *
+          (@bookedPassengers + 1) / 40 * @profitFactor;
+    END//
+
 delimiter ;
