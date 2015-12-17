@@ -71,6 +71,7 @@ VALUES (
   inSeats);
 END//
 delimiter ;
+CALL addPlane('Fokker 70', 40);
 
 # ----------------
 
@@ -185,7 +186,11 @@ INSERT INTO Reservations (flight)
             (SELECT idYear FROM Year
             WHERE year = inYear)) AND
           route=
-            (SELECT idRoute FROM Route WHERE fromAirport=inDepartureAirport AND toAirport=inArrivalAirport)))
+            (SELECT idRoute FROM Route
+              WHERE fromAirport=inDepartureAirport AND
+              toAirport=inArrivalAirport AND
+              year=
+                (SELECT idYear FROM Year where year=inYear))))
   );
 SET outReservationId=LAST_INSERT_ID();
 END//
@@ -213,7 +218,7 @@ IF (SELECT COUNT(*) FROM Passengers WHERE passportNr=inPassportNr) = 0
 THEN
   INSERT INTO Passengers(passportNr, name) VALUES(inPassportNr, inName);
 END IF;
-INSERT INTO ResPass(reservationId, passportNr) VALUES(inReservationId, inPassportNr);
+INSERT INTO ResPass(idReservations, passportNr) VALUES(inReservationId, inPassportNr);
 END//
 delimiter ;
 
@@ -228,7 +233,7 @@ IF (SELECT COUNT(*) FROM Contacts WHERE passportNr=inPassportNr) = 0
 THEN
   INSERT INTO Contacts(passportNr, email, phoneNumber) VALUES(inPassportNr, inMail, inPhoneNumber);
 END IF;
-UPDATE Reservations SET contact = inPassportNr WHERE reservationId=inReservationId;
+UPDATE Reservations SET contact = inPassportNr WHERE idReservations=inReservationId;
 END//
 delimiter ;
 
