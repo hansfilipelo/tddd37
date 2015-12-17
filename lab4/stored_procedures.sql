@@ -81,9 +81,9 @@ CREATE PROCEDURE addFlight(IN inDepartureAirport VARCHAR(3), IN inArrivalAirport
 BEGIN
 INSERT INTO WeeklySchedule(weekday, departureTime, route)
   VALUES (
-    (SELECT idWeekday FROM Weekday WHERE name=inDay),
+    (SELECT idWeekday FROM Weekday WHERE name=inDay AND year=(SELECT idYear FROM Year where year=inYear)),
     inDepartureTime,
-    (SELECT idRoute FROM Route WHERE fromAirport=inDepartureAirport AND toAirport=inArrivalAirport)
+    (SELECT idRoute FROM Route WHERE fromAirport=inDepartureAirport AND toAirport=inArrivalAirport AND year=(SELECT idYear FROM Year where year=inYear))
   );
 # Create an "assembly style" loop for every week
 SET @weeklyScheduleId = LAST_INSERT_ID();
