@@ -184,6 +184,7 @@ INSERT INTO Reservations (flight)
           route=
             (SELECT idRoute FROM Route WHERE fromAirport=inDepartureAirport AND toAirport=inArrivalAirport)))
   );
+SET outReservationId=LAST_INSERT_ID();
 END//
 delimiter ;
 
@@ -193,8 +194,17 @@ DROP PROCEDURE IF EXISTS addReservation;
 delimiter //
 CREATE PROCEDURE addReservation(IN inDepartureAirport VARCHAR(3), IN inArrivalAirport VARCHAR(3), IN inYear INT(11), IN inWeek INT(11), IN inDay VARCHAR(45), IN inTime TIME, IN nrPasengers INT(11), OUT outReservationId INT(11))
 BEGIN
-  CALL addReservationProper(inDepartureAirport, inArrivalAirport, inYear, inWeek, inDay, inTime);
+  CALL addReservationProper(inDepartureAirport, inArrivalAirport, inYear, inWeek, inDay, inTime, outReservationId);
 END//
 delimiter ;
 
 # -----------------
+
+
+DROP PROCEDURE IF EXISTS addPassenger;
+delimiter //
+CREATE PROCEDURE addPassenger(reservation_nr, passport_number, name)
+BEGIN
+  CALL addReservationProper(inDepartureAirport, inArrivalAirport, inYear, inWeek, inDay, inTime);
+END//
+delimiter ;
