@@ -151,3 +151,50 @@ CREATE FUNCTION calculatePrice(flightnumber INT(11))
     END//
 
 delimiter ;
+
+# ----------------
+
+DROP TRIGGER IF EXISTS ins_ticket_id;
+delimiter //
+CREATE TRIGGER ins_ticket_id BEFORE INSERT ON Payments
+  FOR EACH ROW
+  BEGIN
+    UPDATE ResPass SET ResPass.ticketId=ENCRYPT(CONCAT(ResPass.idReservations,ResPass.passportNr)) WHERE ResPass.idReservations=NEW.idReservations;
+  END//
+delimiter ;
+
+# -----------------
+
+DROP PROCEDURE IF EXISTS addReservationProper;
+delimiter //
+CREATE PROCEDURE addReservationProper(IN inDepartureAirport VARCHAR(3), IN inArrivalAirport VARCHAR(3), IN inYear INT(11), IN inWeek INT(11), IN inDay VARCHAR(45), IN inTime TIME, OUT outReservationId INT(11))
+BEGIN
+INSERT INTO Reservations (flight)
+  VALUES (
+    (SELECT idFlights FROM Flights
+      WHERE weeklySchedule=
+        (SELECT idWeeklySchedule FROM WeeklySchedule
+        WHERE departureTime=inTime AND
+        weekday=
+          (SELECT idWeekday FROM Weekday
+          WHERE name=inDay AND
+          year=
+            (SELECT idYear FROM Year
+            WHERE year = inYear)) AND
+          route=
+            (SELECT idRoute FROM Route WHERE fromAirport=inDepartureAirport AND toAirport=inArrivalAirport)))
+  );
+END//
+delimiter ;
+
+# ----------------
+
+DROP PROCEDURE IF EXISTS addReservation;
+delimiter //
+CREATE PROCEDURE addReservation(IN inDepartureAirport VARCHAR(3), IN inArrivalAirport VARCHAR(3), IN inYear INT(11), IN inWeek INT(11), IN inDay VARCHAR(45), IN inTime TIME, IN nrPasengers INT(11), OUT outReservationId INT(11))
+BEGIN
+  CALL addReservationProper(inDepartureAirport, inArrivalAirport, inYear, inWeek, inDay, inTime);
+END//
+delimiter ;
+
+# -----------------
