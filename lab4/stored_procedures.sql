@@ -173,10 +173,10 @@ SELECT 'Add procedure addReservationProper' AS '';
 delimiter //
 CREATE PROCEDURE addReservationProper(IN inDepartureAirport VARCHAR(3), IN inArrivalAirport VARCHAR(3), IN inYear INT(11), IN inWeek INT(11), IN inDay VARCHAR(45), IN inTime TIME, OUT outReservationId INT(11))
 BEGIN
-INSERT INTO Reservations (flight)
-  VALUES (
-    (SELECT idFlights FROM Flights
-      WHERE weeklySchedule=
+SET @_idFlights =
+(SELECT idFlights FROM Flights
+      WHERE weekNr=inWeek AND
+      weeklySchedule=
         (SELECT idWeeklySchedule FROM WeeklySchedule
         WHERE departureTime=inTime AND
         weekday=
@@ -190,9 +190,14 @@ INSERT INTO Reservations (flight)
               WHERE fromAirport=inDepartureAirport AND
               toAirport=inArrivalAirport AND
               year=
-                (SELECT idYear FROM Year where year=inYear))))
-  );
-SET outReservationId=LAST_INSERT_ID();
+                (SELECT idYear FROM Year where year=inYear))));
+IF @_idFlights IS NOT NULL THEN
+  INSERT INTO Reservations (flight)
+    VALUES (@_idFlights);
+  SET outReservationId=LAST_INSERT_ID();
+ELSE
+  SET outReservationId=NULL;
+END IF;
 END//
 delimiter ;
 
@@ -214,11 +219,13 @@ DROP PROCEDURE IF EXISTS addPassenger;
 delimiter //
 CREATE PROCEDURE addPassenger(IN inReservationId INT(11),IN inPassportNr VARCHAR(45), IN inName VARCHAR(45))
 BEGIN
-IF (SELECT COUNT(*) FROM Passengers WHERE passportNr=inPassportNr) = 0
-THEN
-  INSERT INTO Passengers(passportNr, name) VALUES(inPassportNr, inName);
+IF (SELECT COUNT(*) FROM Reservations WHERE idReservations=inReservationId) != 0 THEN
+  IF (SELECT COUNT(*) FROM Passengers WHERE passportNr=inPassportNr) = 0
+  THEN
+    INSERT INTO Passengers(passportNr, name) VALUES(inPassportNr, inName);
+  END IF;
+  INSERT INTO ResPass(idReservations, passportNr) VALUES(inReservationId, inPassportNr);
 END IF;
-INSERT INTO ResPass(idReservations, passportNr) VALUES(inReservationId, inPassportNr);
 END//
 delimiter ;
 
@@ -229,11 +236,15 @@ DROP PROCEDURE IF EXISTS addContact;
 delimiter //
 CREATE PROCEDURE addContact(IN inReservationId INT(11),IN inPassportNr VARCHAR(45), IN inMail VARCHAR(255), IN inPhoneNumber BIGINT)
 BEGIN
-IF (SELECT COUNT(*) FROM Contacts WHERE passportNr=inPassportNr) = 0
-THEN
-  INSERT INTO Contacts(passportNr, email, phoneNumber) VALUES(inPassportNr, inMail, inPhoneNumber);
+IF (SELECT COUNT(*) FROM ResPass
+    WHERE idReservations=inReservationId AND
+    passportNr = inPassportNr) != 0 THEN
+  IF (SELECT COUNT(*) FROM Contacts WHERE passportNr=inPassportNr) = 0
+  THEN
+    INSERT INTO Contacts(passportNr, email, phoneNumber) VALUES(inPassportNr, inMail, inPhoneNumber);
+  END IF;
+  UPDATE Reservations SET contact = inPassportNr WHERE idReservations=inReservationId;
 END IF;
-UPDATE Reservations SET contact = inPassportNr WHERE idReservations=inReservationId;
 END//
 delimiter ;
 
@@ -244,6 +255,8 @@ DROP PROCEDURE IF EXISTS addPayment;
 delimiter //
 CREATE PROCEDURE addPayment(IN inReservationId INT(11), IN inCardHolderName VARCHAR(45), IN inCreditCardNumber BIGINT(255))
 BEGIN
-INSERT INTO Payments(idReservations, cardHolderName, creditCardNumber) VALUES(inReservationId, inCardHolderName, inCreditCardNumber);
+IF (SELECT COUNT(*) FROM Reservations WHERE idReservations=inReservationId) != 0 THEN
+  INSERT INTO Payments(idReservations, cardHolderName, creditCardNumber) VALUES(inReservationId, inCardHolderName, inCreditCardNumber);
+END IF;
 END//
 delimiter ;
