@@ -260,3 +260,33 @@ IF (SELECT COUNT(*) FROM Reservations WHERE idReservations=inReservationId) != 0
 END IF;
 END//
 delimiter ;
+
+# -----------------
+
+SELECT 'Create view for all flights' AS '';
+CREATE OR REPLACE VIEW allFlights AS SELECT
+FromAirport.name AS departure_city_name,
+ToAirport.name AS destination_city_name,
+WeeklySchedule.departureTime AS departure_time,
+Weekday.name AS departure_day,
+Flights.weekNr AS departure_week,
+Year.year AS departure_year,
+calculateFreeSeats(Flights.idFlights) AS nr_of_free_seats,
+calculatePrice(Flights.idFlights) AS current_price_per_seat
+
+FROM 
+Flights,
+WeeklySchedule,
+Route,
+Weekday,
+Year,
+Destination AS FromAirport,
+Destination AS ToAirport
+
+WHERE
+Flights.weeklySchedule=WeeklySchedule.idWeeklySchedule AND
+WeeklySchedule.route=Route.idRoute AND
+Route.fromAirport=FromAirport.airportId AND
+Route.toAirport=ToAirport.airportId AND
+WeeklySchedule.weekday=Weekday.idWeekday AND
+Route.year=Year.idYear;
