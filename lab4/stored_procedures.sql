@@ -155,6 +155,8 @@ delimiter ;
 # ----------------
 
 DROP TRIGGER IF EXISTS ins_ticket_id;
+SELECT 'Add trigger for ticketId' AS '';
+# Triggers warning since ENCRYPT is deprecated
 delimiter //
 CREATE TRIGGER ins_ticket_id BEFORE INSERT ON Payments
   FOR EACH ROW
@@ -166,6 +168,7 @@ delimiter ;
 # -----------------
 
 DROP PROCEDURE IF EXISTS addReservationProper;
+SELECT 'Add procedure addReservationProper' AS '';
 delimiter //
 CREATE PROCEDURE addReservationProper(IN inDepartureAirport VARCHAR(3), IN inArrivalAirport VARCHAR(3), IN inYear INT(11), IN inWeek INT(11), IN inDay VARCHAR(45), IN inTime TIME, OUT outReservationId INT(11))
 BEGIN
@@ -191,6 +194,7 @@ delimiter ;
 # ----------------
 
 DROP PROCEDURE IF EXISTS addReservation;
+SELECT 'Add procedure addReservation' AS '';
 delimiter //
 CREATE PROCEDURE addReservation(IN inDepartureAirport VARCHAR(3), IN inArrivalAirport VARCHAR(3), IN inYear INT(11), IN inWeek INT(11), IN inDay VARCHAR(45), IN inTime TIME, IN nrPasengers INT(11), OUT outReservationId INT(11))
 BEGIN
@@ -200,11 +204,41 @@ delimiter ;
 
 # -----------------
 
-
+SELECT 'Add procedure addPassenger' AS '';
 DROP PROCEDURE IF EXISTS addPassenger;
 delimiter //
-CREATE PROCEDURE addPassenger(reservation_nr, passport_number, name)
+CREATE PROCEDURE addPassenger(IN inReservationId INT(11),IN inPassportNr VARCHAR(45), IN inName VARCHAR(45))
 BEGIN
-  CALL addReservationProper(inDepartureAirport, inArrivalAirport, inYear, inWeek, inDay, inTime);
+IF (SELECT COUNT(*) FROM Passengers WHERE passportNr=inPassportNr) = 0
+THEN
+  INSERT INTO Passengers(passportNr, name) VALUES(inPassportNr, inName);
+END IF;
+INSERT INTO ResPass(reservationId, passportNr) VALUES(inReservationId, inPassportNr);
+END//
+delimiter ;
+
+# -----------------
+
+SELECT 'Add procedure addContact' AS '';
+DROP PROCEDURE IF EXISTS addContact;
+delimiter //
+CREATE PROCEDURE addContact(IN inReservationId INT(11),IN inPassportNr VARCHAR(45), IN inMail VARCHAR(255), IN inPhoneNumber BIGINT)
+BEGIN
+IF (SELECT COUNT(*) FROM Contacts WHERE passportNr=inPassportNr) = 0
+THEN
+  INSERT INTO Contacts(passportNr, email, phoneNumber) VALUES(inPassportNr, inMail, inPhoneNumber);
+END IF;
+UPDATE Reservations SET contact = inPassportNr WHERE reservationId=inReservationId;
+END//
+delimiter ;
+
+# -----------------
+
+SELECT 'Add procedure addPayment' AS '';
+DROP PROCEDURE IF EXISTS addPayment;
+delimiter //
+CREATE PROCEDURE addPayment(IN inReservationId INT(11), IN inCardHolderName VARCHAR(45), IN inCreditCardNumber BIGINT(255))
+BEGIN
+INSERT INTO Payments(idReservations, cardHolderName, creditCardNumber) VALUES(inReservationId, inCardHolderName, inCreditCardNumber);
 END//
 delimiter ;
