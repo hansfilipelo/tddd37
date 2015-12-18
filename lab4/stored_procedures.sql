@@ -265,6 +265,7 @@ delimiter //
 CREATE PROCEDURE addPayment(IN inReservationId INT(11), IN inCardHolderName VARCHAR(45), IN inCreditCardNumber BIGINT(255))
 BEGIN
 IF calculateFreeSeats((SELECT flight FROM Reservations WHERE idReservations=inReservationId)) >= (SELECT COUNT(*) FROM ResPass WHERE idReservations=inReservationId) THEN
+  SELECT SLEEP(5);
   IF (SELECT COUNT(*) FROM Reservations WHERE idReservations=inReservationId) != 0 THEN
     INSERT INTO Payments(idReservations, cardHolderName, creditCardNumber) VALUES(inReservationId, inCardHolderName, inCreditCardNumber);
     END IF;
