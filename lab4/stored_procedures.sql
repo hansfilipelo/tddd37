@@ -264,8 +264,12 @@ DROP PROCEDURE IF EXISTS addPayment;
 delimiter //
 CREATE PROCEDURE addPayment(IN inReservationId INT(11), IN inCardHolderName VARCHAR(45), IN inCreditCardNumber BIGINT(255))
 BEGIN
-IF (SELECT COUNT(*) FROM Reservations WHERE idReservations=inReservationId) != 0 THEN
-  INSERT INTO Payments(idReservations, cardHolderName, creditCardNumber) VALUES(inReservationId, inCardHolderName, inCreditCardNumber);
+IF calculateFreeSeats((SELECT flight FROM Reservations WHERE idReservations=inReservationId)) >= (SELECT COUNT(*) FROM ResPass WHERE idReservations=inReservationId) THEN
+  IF (SELECT COUNT(*) FROM Reservations WHERE idReservations=inReservationId) != 0 THEN
+    INSERT INTO Payments(idReservations, cardHolderName, creditCardNumber) VALUES(inReservationId, inCardHolderName, inCreditCardNumber);
+    END IF;
+ELSE
+  SELECT 'Not enough free seats on plane!' AS '';
 END IF;
 END//
 delimiter ;
@@ -283,7 +287,7 @@ Year.year AS departure_year,
 calculateFreeSeats(Flights.idFlights) AS nr_of_free_seats,
 calculatePrice(Flights.idFlights) AS current_price_per_seat
 
-FROM 
+FROM
 Flights,
 WeeklySchedule,
 Route,
