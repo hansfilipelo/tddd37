@@ -110,11 +110,17 @@ DROP FUNCTION IF EXISTS calculateFreeSeats;
 SELECT 'Add helper function for checking number of free seats' AS '';
 CREATE FUNCTION calculateFreeSeats(flightnumber INT)
   RETURNS INT
-    RETURN 40-(SELECT COUNT(*) FROM Reservations,Payments WHERE Reservations.idReservations=Payments.idReservations AND Reservations.flight = flightnumber);
+    RETURN (SELECT Plane.seats FROM Flights,Plane
+    WHERE Flights.idFlights=flightnumber AND
+    Flights.plane=Plane.idPlane)
+    -
+    (SELECT COUNT(*) FROM Reservations,Payments,ResPass
+    WHERE Reservations.idReservations=Payments.idReservations AND
+    Reservations.idReservations=ResPass.idReservations AND
+    Reservations.flight = flightnumber);
 
 # ----------------
 
-DROP PROCEDURE IF EXISTS calculatePriceHelper;
 DROP FUNCTION IF EXISTS calculatePrice;
 SELECT 'Add helper function for calculating seat price for a flight' AS '';
 delimiter //
@@ -127,17 +133,20 @@ CREATE FUNCTION calculatePrice(flightnumber INT(11))
       SET @routePrice =
           (SELECT routePrice FROM Route
           WHERE idRoute =
-              (SELECT weekday FROM WeeklySchedule
+              (SELECT route FROM WeeklySchedule
               WHERE idWeeklySchedule = @weeklySchedule));
 
       SET @weekdayFactor =
           (SELECT weekdayFactor FROM Weekday
-          WHERE idWeekday = @weeklySchedule);
+          WHERE idWeekday =
+	      (SELECT weekday FROM WeeklySchedule
+	      WHERE idWeeklySchedule=@weeklySchedule));
 
-      SET @bookedPassengers =
-          (SELECT COUNT(*) FROM Reservations,Payments
-          WHERE Reservations.idReservations=Payments.idReservations AND
-          Reservations.flight = flightnumber);
+      SET @bookedPassengers = (SELECT Plane.seats FROM Flights,Plane
+          WHERE Flights.idFlights=flightnumber AND
+          Flights.plane=Plane.idPlane)
+          -
+	  calculateFreeSeats(flightnumber);
 
       SET @profitFactor =
           (SELECT profitfactor FROM Year
@@ -147,8 +156,8 @@ CREATE FUNCTION calculatePrice(flightnumber INT(11))
                   (SELECT weekday FROM WeeklySchedule
                   WHERE idWeeklySchedule = @weeklySchedule)));
 
-      RETURN @routePrice * @weekdayFactor *
-          (@bookedPassengers + 1) / 40 * @profitFactor;
+      RETURN ROUND(@routePrice * @weekdayFactor *
+          ((@bookedPassengers + 1) / 40) * @profitFactor, 9);
     END//
 
 delimiter ;
