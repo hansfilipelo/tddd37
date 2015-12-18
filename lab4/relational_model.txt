@@ -1,31 +1,39 @@
-Destination(airportId, Name)
+Year(idYear, year, profitfactor)
 
 
-Route(idRoute, From, To)
+WeeklySchedule(idWeeklySchedule, weekday, departureTime, route)
 
 
-WeeklySchedule(idWeeklySchedule, Year, Weekday, DepartureTime, Route)
+Contacts(passportNr, email, phoneNumber)
 
 
-Year(idYear, Year)
+Plane(idPlane, model, seats)
 
 
-Weekday(idWeekday, Name, PriceFactor)
+Flights(idFlights, weeklySchedule, weekNr, plane)
 
 
-Flights(idFlights, WeeklySchedule, WeekNr, Plane)
+Passengers(passportNr, name)
 
 
-Plane(idPlane, Model, Seats)
+Weekday(idWeekday, name, weekdayFactor, year)
+
+
+Country(idCountry, name)
+
+
+Destination(airportId, name, country)
+
+
+Reservations(idReservations, flight, contact)
+
+
+ResPass(idReservations, passportNr, ticketId)
+
+
+Route(idRoute, fromAirport, toAirport, routePrice, year)
 
 
 Payments(idReservations, cardHolderName, creditCardNumber)
 
 
-Reservations(idReservations, Flight, Contact)
-
-
-Passengers(PassportNr, FirstName, FamilyName)
-
-
-ResPass(idReservations, PassportNr, TicketId)
